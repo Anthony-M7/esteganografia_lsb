@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio de Esteganografía LSB</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333;}
+        h1 { text-align: center; color: #1a1a1a; margin-bottom: 30px;}
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        
+        .controls { display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;}
+        input[type="text"], input[type="file"] { padding: 12px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 15px;}
+        input[type="text"] { width: 300px; }
+        
+        button { background-color: #0066cc; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 6px; font-weight: bold; transition: background 0.3s;}
+        button:hover { background-color: #004c99; }
+        .btn-reveal { background-color: #ff9800; }
+        .btn-reveal:hover { background-color: #e68a00; }
+        .btn-download { background-color: #6c757d; }
+        .btn-download:hover { background-color: #5a6268; }
+
+        .comparison-grid { display: flex; justify-content: space-between; gap: 20px; margin-top: 20px;}
+        .image-box { flex: 1; text-align: center; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px dashed #ccc;}
+        .image-box img { max-width: 100%; height: 300px; object-fit: contain; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 10px; background-color: #fff;}
+        
+        .log-container { background-color: #1e1e1e; color: #4af626; font-family: 'Courier New', Courier, monospace; padding: 20px; border-radius: 8px; max-height: 250px; overflow-y: auto; text-align: left; line-height: 1.5; font-size: 14px;}
+        .log-reveal { color: #00d4ff; border-left: 4px solid #00d4ff; }
+        
+        .result-box { text-align: center; background: #e8f5e9; padding: 20px; border-radius: 8px; margin-top: 20px; border: 2px solid #4caf50;}
+        .result-text { font-size: 24px; font-weight: bold; color: #2e7d32; margin: 10px 0;}
+    </style>
+</head>
+<body>
+
+    <h1>Laboratorio Visual: Esteganografía LSB 🕵️‍♂️</h1>
+
+    {% if mensaje_revelado %}
+        <div class="result-box">
+            <p>🎯 ¡Mensaje extraído exitosamente!</p>
+            <div class="result-text">"{{ mensaje_revelado }}"</div>
+            <br>
+            <a href="/"><button style="background-color: #4caf50;">Hacer otra prueba</button></a>
+        </div>
+        
+        <h3 style="margin-top: 20px;">Log del Proceso de Extracción:</h3>
+        <div class="log-container log-reveal">
+            <pre>{{ log_revelado }}</pre>
+        </div>
+    {% endif %}
+
+    {% if error_revelar %}
+        <div class="result-box" style="background: #ffebee; border-color: #f44336;">
+            <div class="result-text" style="color: #c62828;">{{ error_revelar }}</div>
+            <br>
+            <a href="/"><button style="background-color: #666;">Volver al inicio</button></a>
+        </div>
+    {% endif %}
+
+    {% if not mensaje_revelado and not error_revelar %}
+    <div class="card">
+        <h2 style="text-align: center; margin-top: 0;">1. Ocultar Mensaje</h2>
+        <form action="/ocultar" method="POST" enctype="multipart/form-data" class="controls">
+            <input type="file" name="imagen" accept="image/png, image/jpeg, image/bmp" required>
+            <input type="text" name="mensaje" placeholder="Escribe el mensaje secreto aquí..." required>
+            <button type="submit">Generar Imagen</button>
+        </form>
+
+        {% if log_procesado %}
+            <div class="comparison-grid">
+                <div class="image-box">
+                    <h3>📷 Imagen Original</h3>
+                    <img src="{{ url_for('static', filename='uploads/' + img_original) }}" alt="Original">
+                </div>
+                <div class="image-box">
+                    <h3>🔐 Imagen Modificada (Estego)</h3>
+                    <img src="{{ url_for('static', filename='uploads/' + img_resultado) }}" alt="Modificada">
+                    <br><br>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <form action="/revelar_directo" method="POST">
+                            <input type="hidden" name="filename" value="{{ img_resultado }}">
+                            <button type="submit" class="btn-reveal">👁️ Revelar aquí mismo</button>
+                        </form>
+                        
+                        <a href="{{ url_for('static', filename='uploads/' + img_resultado) }}" download>
+                            <button type="button" class="btn-download">⬇️ Descargar (Opcional)</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">Log del Proceso de Inyección:</h3>
+            <div class="log-container">
+                <pre>{{ log_procesado }}</pre>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2 style="text-align: center; margin-top: 0;">2. Revelar Desde Archivo (Opcional)</h2>
+        <p style="text-align: center; color: #666;">Usa esto solo si descargaste la imagen y quieres extraerla manualmente.</p>
+        <form action="/revelar" method="POST" enctype="multipart/form-data" class="controls">
+            <input type="file" name="imagen_secreta" accept="image/png, image/bmp" required>
+            <button type="submit" style="background-color: #28a745;">Extraer Mensaje</button>
+        </form>
+    </div>
+    {% endif %}
+
+</body>
+</html>
